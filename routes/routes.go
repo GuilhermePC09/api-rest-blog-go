@@ -10,6 +10,7 @@ import (
 
 func HandleRequest() {
 	router := mux.NewRouter()
+
 	router.HandleFunc("/posts", controllers.CreatePost).Methods("POST")
 	router.HandleFunc("/posts", controllers.ListPosts).Methods("GET")
 	router.HandleFunc("/posts", controllers.EditPost).Methods("PUT")
@@ -20,5 +21,5 @@ func HandleRequest() {
 	router.HandleFunc("/users", controllers.EditUser).Methods("PUT")
 	router.HandleFunc("/users", controllers.DeleteUser).Methods("DELETE")
 
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	log.Fatal(http.ListenAndServe(":8000", router))
 }

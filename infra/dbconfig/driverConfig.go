@@ -6,17 +6,17 @@ import (
 )
 
 type UserTable struct {
-	IdUser       int
+	IdUser       int64
 	UserName     string
 	UserEmail    string
 	UserPassword string
 }
 
 type PostTable struct {
-	IdUser   int
-	IdPost   int
+	IdUser   int64
+	IdPost   int64
 	Title    string
-	Content  []byte
+	Content  string
 	DateTime time.Time
 }
 
@@ -26,6 +26,7 @@ const Host = "localhost"
 const Port = "5432"
 const Password = "Gui090900!"
 const DbName = "BlogDatabase"
-const TableName = "posts"
+const TablePost = "posts"
+const TableUser = "users"
 
 var DataSourceName = fmt.Sprintf("host=%s port=%s user=%s "+"password=%s dbname=%s sslmode=disable", Host, Port, User, Password, DbName)

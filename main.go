@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/GuilhermePC09/api-rest-blog-go/gopostgres/dbconfig"
-	"github.com/GuilhermePC09/api-rest-blog-go/repository"
+	"github.com/GuilhermePC09/api-rest-blog-go/database"
+	"github.com/GuilhermePC09/api-rest-blog-go/infra/dbconfig"
 	"github.com/GuilhermePC09/api-rest-blog-go/routes"
 	_ "github.com/lib/pq"
 )
@@ -17,7 +17,7 @@ var (
 func main() {
 	fmt.Printf("Accessing %s ... ", dbconfig.DbName)
 
-	repository.Db, err = sql.Open(dbconfig.PostgresDriver, dbconfig.DataSourceName)
+	database.Db, err = sql.Open(dbconfig.PostgresDriver, dbconfig.DataSourceName)
 
 	if err != nil {
 		panic(err.Error())
@@ -25,7 +25,7 @@ func main() {
 		fmt.Println("Connected!")
 	}
 
-	defer repository.Db.Close()
+	defer database.Db.Close()
 
 	routes.HandleRequest()
 }

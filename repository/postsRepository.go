@@ -1,106 +1,133 @@
 package repository
 
 import (
-	"database/sql"
 	"fmt"
 
-	"github.com/GuilhermePC09/api-rest-blog-go/gopostgres/dbconfig"
+	"github.com/GuilhermePC09/api-rest-blog-go/database"
+	"github.com/GuilhermePC09/api-rest-blog-go/infra/dbconfig"
 	_ "github.com/lib/pq"
 )
 
-var (
-	Db   *sql.DB
-	errp error
-)
-
-func checkErrPosts(errp error) {
-	if errp != nil {
-		panic(errp.Error())
-	}
+type PostInfo struct {
+	userId  int64
+	postId  int64
+	title   string
+	content string
 }
 
-func PostSqlSelect() {
-	sqlStatement, errp := Db.Query("SELECT postid, title, Content FROM " + dbconfig.TableName)
-	checkErrPosts(errp)
+func FindPost(id int64) bool {
+
+	var exists bool = false
+
+	sqlStatement, Err := database.Db.Query("SELECT postid FROM " + dbconfig.TablePost)
+	database.CheckErr(Err)
 
 	for sqlStatement.Next() {
 		var posts dbconfig.PostTable
 
-		errp = sqlStatement.Scan(&posts.IdPost, &posts.Title, &posts.Content)
-		checkErrPosts(errp)
+		Err = sqlStatement.Scan(&posts.IdPost)
+		database.CheckErr(Err)
 
-		fmt.Printf("%d\t%s\t%s \n", posts.IdPost, posts.Title, posts.Content)
+		if posts.IdPost == id {
+			exists = true
+		}
 	}
+	return exists
 }
 
-func PostSqlSelectId(id int) (int, string, []byte) {
+func PostSqlSelect() []*PostInfo {
+
+	postList := make([]*PostInfo, 0)
+
+	sqlStatement, Err := database.Db.Query("SELECT postid, userid, title, Content FROM " + dbconfig.TablePost)
+	database.CheckErr(Err)
+
+	for sqlStatement.Next() {
+		var posts dbconfig.PostTable
+
+		Err = sqlStatement.Scan(&posts.IdPost, &posts.IdUser, &posts.Title, &posts.Content)
+		database.CheckErr(Err)
+
+		createPost := &PostInfo{
+			userId:  posts.IdUser,
+			postId:  posts.IdPost,
+			title:   posts.Title,
+			content: posts.Content,
+		}
+
+		postList = append(postList, createPost)
+	}
+	return postList
+}
+
+func PostSqlSelectId(id int64) (int64, string, string) {
 	var post dbconfig.PostTable
 
-	sqlStatement := fmt.Sprintf("SELECT postid, title, content FROM %s where postid = $1", dbconfig.TableName)
-	errp = Db.QueryRow(sqlStatement, id).Scan(&post.IdPost, &post.Title, &post.Content)
-	checkErrPosts(errp)
+	sqlStatement := fmt.Sprintf("SELECT postid, title, content FROM %s where postid = $1", dbconfig.TablePost)
+	Err := database.Db.QueryRow(sqlStatement, id).Scan(&post.IdPost, &post.Title, &post.Content)
+	database.CheckErr(Err)
 
 	return post.IdPost, post.Title, post.Content
 }
 
-func PostSqlInsert(postId int, userId int, title string, content []byte) int64 {
+func PostSqlInsert(postId int64, userId int64, title string, content string) int64 {
 
-	sqlStatement := fmt.Sprintf("INSERT INTO %s VALUES ($1, $2, $3, $4)", dbconfig.TableName)
+	sqlStatement := fmt.Sprintf("INSERT INTO %s VALUES ($1, $2, $3, $4)", dbconfig.TablePost)
 
-	insert, errp := Db.Prepare(sqlStatement)
-	checkErrPosts(errp)
+	insert, Err := database.Db.Prepare(sqlStatement)
+	database.CheckErr(Err)
 
-	result, errp := insert.Exec(postId, userId, title, content)
-	checkErrPosts(errp)
+	result, Err := insert.Exec(postId, userId, title, content)
+	database.CheckErr(Err)
 
-	affect, errp := result.RowsAffected()
-	checkErrPosts(errp)
-
-	return affect
-}
-
-func PostSqlUpdateContent(postId int, content []byte) int64 {
-	sqlStatement := fmt.Sprintf("UPDATE %s SET content=$1 where postid=$2", dbconfig.TableName)
-
-	update, errp := Db.Prepare(sqlStatement)
-	checkErrPosts(errp)
-
-	result, errp := update.Exec(content, postId)
-	checkErrPosts(errp)
-
-	affect, errp := result.RowsAffected()
-	checkErrPosts(errp)
+	affect, Err := result.RowsAffected()
+	database.CheckErr(Err)
 
 	return affect
 }
 
-func PostSqlUpdateTitle(postId int, title string) int64 {
-	sqlStatement := fmt.Sprintf("UPDATE %s SET title=$1 where postid=$2", dbconfig.TableName)
+func PostSqlUpdateContent(postId int64, content string) int64 {
+	sqlStatement := fmt.Sprintf("UPDATE %s SET content=$1 where postid=$2", dbconfig.TablePost)
 
-	update, errp := Db.Prepare(sqlStatement)
-	checkErrPosts(errp)
+	update, Err := database.Db.Prepare(sqlStatement)
+	database.CheckErr(Err)
 
-	result, errp := update.Exec(title, postId)
-	checkErrPosts(errp)
+	result, Err := update.Exec(content, postId)
+	database.CheckErr(Err)
 
-	affect, errp := result.RowsAffected()
-	checkErrPosts(errp)
+	affect, Err := result.RowsAffected()
+	database.CheckErr(Err)
 
 	return affect
 }
 
-func PostSqlDelete(postId int) int64 {
+func PostSqlUpdateTitle(postId int64, title string) int64 {
+	sqlStatement := fmt.Sprintf("UPDATE %s SET title=$1 where postid=$2", dbconfig.TablePost)
 
-	sqlStatement := fmt.Sprintf("delete from %s where postid=$1", dbconfig.TableName)
+	update, Err := database.Db.Prepare(sqlStatement)
+	database.CheckErr(Err)
 
-	delete, errp := Db.Prepare(sqlStatement)
-	checkErrPosts(errp)
+	result, Err := update.Exec(title, postId)
+	database.CheckErr(Err)
 
-	result, errp := delete.Exec(postId)
-	checkErrPosts(errp)
+	affect, Err := result.RowsAffected()
+	database.CheckErr(Err)
 
-	affect, errp := result.RowsAffected()
-	checkErrPosts(errp)
+	return affect
+}
+
+func PostSqlDelete(postId int64) int64 {
+
+	sqlStatement := fmt.Sprintf("delete from %s where postid=$1", dbconfig.TablePost)
+
+	delete, Err := database.Db.Prepare(sqlStatement)
+	database.CheckErr(Err)
+
+	result, Err := delete.Exec(postId)
+	database.CheckErr(Err)
+
+	affect, Err := result.RowsAffected()
+	database.CheckErr(Err)
 
 	return affect
 }
