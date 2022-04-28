@@ -35,9 +35,9 @@ func FindPost(id int64) bool {
 	return exists
 }
 
-func PostSqlSelect() []*PostInfo {
+func PostSqlSelect() []PostInfo {
 
-	postList := make([]*PostInfo, 0)
+	postList := make([]PostInfo, 0)
 
 	sqlStatement, Err := database.Db.Query("SELECT postid, userid, title, Content FROM " + dbconfig.TablePost)
 	database.CheckErr(Err)
@@ -48,7 +48,7 @@ func PostSqlSelect() []*PostInfo {
 		Err = sqlStatement.Scan(&posts.IdPost, &posts.IdUser, &posts.Title, &posts.Content)
 		database.CheckErr(Err)
 
-		createPost := &PostInfo{
+		createPost := PostInfo{
 			userId:  posts.IdUser,
 			postId:  posts.IdPost,
 			title:   posts.Title,
