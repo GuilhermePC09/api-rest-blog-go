@@ -6,6 +6,7 @@ import (
 	"github.com/GuilhermePC09/api-rest-blog-go/database"
 	"github.com/GuilhermePC09/api-rest-blog-go/infra/dbconfig"
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserInfo struct {
@@ -15,7 +16,32 @@ type UserInfo struct {
 	UserPassword string
 }
 
-func FindUser(email string) bool {
+func hashPassword(userPassword string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(userPassword), 14)
+
+	return string(bytes), err
+}
+
+func FindUserId(id int64) bool {
+	var exists bool = false
+
+	sqlStatement, Err := database.Db.Query("SELECT userid FROM " + dbconfig.TableUser)
+	database.CheckErr(Err)
+
+	for sqlStatement.Next() {
+		var ids dbconfig.UserTable
+
+		Err = sqlStatement.Scan(&ids.IdUser)
+		database.CheckErr(Err)
+
+		if ids.IdUser == id {
+			exists = true
+		}
+	}
+	return exists
+}
+
+func FindUserEmail(email string) bool {
 	var exists bool = false
 
 	sqlStatement, Err := database.Db.Query("SELECT email FROM " + dbconfig.TableUser)
@@ -47,11 +73,14 @@ func UserSqlSelect() []UserInfo {
 		Err = sqlStatement.Scan(&users.IdUser, &users.UserName, &users.UserEmail, &users.UserPassword)
 		database.CheckErr(Err)
 
+		hash, Err := hashPassword(users.UserPassword)
+		database.CheckErr(Err)
+
 		createUser := UserInfo{
 			UserId:       users.IdUser,
 			UserName:     users.UserName,
 			UserEmail:    users.UserEmail,
-			UserPassword: users.UserPassword,
+			UserPassword: hash,
 		}
 
 		userList = append(userList, createUser)
@@ -59,14 +88,27 @@ func UserSqlSelect() []UserInfo {
 	return userList
 }
 
-func UserSqlSelectId(id int64) (int64, string, string, string) {
+func UserSqlSelectId(id int64) []UserInfo {
 	var user dbconfig.UserTable
+	userList := make([]UserInfo, 0)
 
-	sqlStatement := fmt.Sprintf("SELECT postid, title, content FROM %s where userid = $1", dbconfig.TableUser)
+	sqlStatement := fmt.Sprintf("SELECT userid, name, email, password FROM %s where userid = $1", dbconfig.TableUser)
 	Err := database.Db.QueryRow(sqlStatement, id).Scan(&user.IdUser, &user.UserName, &user.UserEmail, &user.UserPassword)
+
 	database.CheckErr(Err)
 
-	return user.IdUser, user.UserName, user.UserEmail, user.UserPassword
+	hash, Err := hashPassword(user.UserPassword)
+	database.CheckErr(Err)
+
+	createUser := UserInfo{
+		UserId:       user.IdUser,
+		UserName:     user.UserName,
+		UserEmail:    user.UserEmail,
+		UserPassword: hash,
+	}
+
+	userList = append(userList, createUser)
+	return userList
 }
 
 func UserSqlInsert(userId int64, userName string, userEmail string, userPassword string) int64 {

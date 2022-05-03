@@ -6,28 +6,30 @@ import (
 	"github.com/GuilhermePC09/api-rest-blog-go/repository"
 )
 
-func EditUserService(id int64, email string, editType string, editInfo string) error {
+func EditUserService(editType string, userId int64, email string, name string, password string) ([]repository.UserInfo, error) {
 
-	userExists := repository.FindUser(email)
+	userAlreadyExists := repository.FindUserId(userId)
 
-	if !userExists {
-		return errors.New("user dont exist")
+	if !userAlreadyExists {
+		return nil, errors.New("User dont exist")
 	}
-
 	if editType == "name" {
-		repository.UserSqlUpdateName(id, editInfo)
-		return nil
+		repository.UserSqlUpdateName(userId, name)
+		editedUser := repository.UserSqlSelectId(userId)
+		return editedUser, nil
 	}
 
 	if editType == "email" {
-		repository.UserSqlUpdateEmail(id, editInfo)
-		return nil
+		repository.UserSqlUpdateEmail(userId, email)
+		editedUser := repository.UserSqlSelectId(userId)
+		return editedUser, nil
 	}
 
 	if editType == "password" {
-		repository.UserSqlUpdatePasword(id, editInfo)
-		return nil
+		repository.UserSqlUpdatePasword(userId, password)
+		editedUser := repository.UserSqlSelectId(userId)
+		return editedUser, nil
 	} else {
-		return errors.New("type arent selected")
+		return nil, errors.New("Type arent selected")
 	}
 }

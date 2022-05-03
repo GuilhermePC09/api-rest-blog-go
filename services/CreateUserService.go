@@ -20,7 +20,7 @@ func CreateUserService(userName string, userEmail string, userPassword string) (
 		return IUserRequest{}, errors.New("missing information")
 	}
 
-	userAlreadyExists := repository.FindUser(userEmail)
+	userAlreadyExists := repository.FindUserEmail(userEmail)
 
 	if userAlreadyExists {
 		return IUserRequest{}, errors.New("user already exists")

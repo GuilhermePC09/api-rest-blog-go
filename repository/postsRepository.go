@@ -9,10 +9,10 @@ import (
 )
 
 type PostInfo struct {
-	userId  int64
-	postId  int64
-	title   string
-	content string
+	UserId  int64
+	PostId  int64
+	Title   string
+	Content string
 }
 
 func FindPost(id int64) bool {
@@ -39,7 +39,7 @@ func PostSqlSelect() []PostInfo {
 
 	postList := make([]PostInfo, 0)
 
-	sqlStatement, Err := database.Db.Query("SELECT postid, userid, title, Content FROM " + dbconfig.TablePost)
+	sqlStatement, Err := database.Db.Query("SELECT postid, userid, title, content FROM " + dbconfig.TablePost)
 	database.CheckErr(Err)
 
 	for sqlStatement.Next() {
@@ -49,10 +49,10 @@ func PostSqlSelect() []PostInfo {
 		database.CheckErr(Err)
 
 		createPost := PostInfo{
-			userId:  posts.IdUser,
-			postId:  posts.IdPost,
-			title:   posts.Title,
-			content: posts.Content,
+			UserId:  posts.IdUser,
+			PostId:  posts.IdPost,
+			Title:   posts.Title,
+			Content: posts.Content,
 		}
 
 		postList = append(postList, createPost)
@@ -60,14 +60,25 @@ func PostSqlSelect() []PostInfo {
 	return postList
 }
 
-func PostSqlSelectId(id int64) (int64, string, string) {
+func PostSqlSelectId(id int64) []PostInfo {
 	var post dbconfig.PostTable
+	postList := make([]PostInfo, 0)
 
 	sqlStatement := fmt.Sprintf("SELECT postid, title, content FROM %s where postid = $1", dbconfig.TablePost)
-	Err := database.Db.QueryRow(sqlStatement, id).Scan(&post.IdPost, &post.Title, &post.Content)
+	Err := database.Db.QueryRow(sqlStatement, id).Scan(&post.IdUser, &post.IdPost, &post.Title, &post.Content)
+
 	database.CheckErr(Err)
 
-	return post.IdPost, post.Title, post.Content
+	createPost := PostInfo{
+		UserId:  post.IdUser,
+		PostId:  post.IdPost,
+		Title:   post.Title,
+		Content: post.Content,
+	}
+
+	postList = append(postList, createPost)
+
+	return postList
 }
 
 func PostSqlInsert(postId int64, userId int64, title string, content string) int64 {

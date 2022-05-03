@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/GuilhermePC09/api-rest-blog-go/services"
+	"github.com/gorilla/mux"
 )
 
 type UserRequest struct {
@@ -15,15 +17,12 @@ type UserRequest struct {
 	Password string
 }
 
-type EditRequest struct {
+type EditUserRequest struct {
 	Id       int64
+	Name     string
 	Email    string
 	Type     string
-	EditInfo string
-}
-
-type DeleteRequest struct {
-	Id int64
+	Password string
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -64,44 +63,52 @@ func ListUsers(w http.ResponseWriter, r *http.Request) {
 
 func EditUser(w http.ResponseWriter, r *http.Request) {
 
-	var editUser EditRequest
+	var editUser EditUserRequest
 
 	err := json.NewDecoder(r.Body).Decode(&editUser)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	services.EditUserService(editUser.Id, editUser.Email, editUser.Type, editUser.EditInfo)
-	response := make(map[string]string)
-	response["message"] = "Usuário alterado com sucesso"
+	edit, err2 := services.EditUserService(editUser.Type, editUser.Id, editUser.Email, editUser.Name, editUser.Password)
 
-	checkResponse, err2 := json.Marshal(response)
 	if err2 != nil {
-		http.Error(w, err2.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Write(checkResponse)
+	response, err3 := json.MarshalIndent(edit, "", " ")
+
+	if err3 != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Fprintf(w, string(response))
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	var deleteUser DeleteRequest
 
-	err := json.NewDecoder(r.Body).Decode(&deleteUser)
+	vars := mux.Vars(r)
+	id := vars["userId"]
+
+	convId, err := strconv.ParseInt(id, 10, 64)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	services.DeleteUserService(deleteUser.Id)
+	services.DeletePostService(convId)
 
 	response := make(map[string]string)
-	response["message"] = "Usuário deletado com sucesso"
+	response["message"] = "User deletado com sucesso"
 
 	checkResponse, err2 := json.Marshal(response)
 	if err2 != nil {
-		http.Error(w, err2.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

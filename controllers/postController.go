@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/GuilhermePC09/api-rest-blog-go/services"
+	"github.com/gorilla/mux"
 )
 
 type PostRequest struct {
 	Id      int64
+	IdUser  int64
 	Title   string
 	Content string
 }
@@ -21,10 +24,6 @@ type EditPostRequest struct {
 	Type    string
 }
 
-type DeletePostRequest struct {
-	Id int64
-}
-
 func CreatePost(w http.ResponseWriter, r *http.Request) {
 	var post PostRequest
 
@@ -34,7 +33,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	checkedPost, err2 := services.CreatePostService(0, post.Title, post.Content)
+	checkedPost, err2 := services.CreatePostService(post.IdUser, post.Title, post.Content)
 
 	if err2 != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -47,7 +46,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 func ListPosts(w http.ResponseWriter, r *http.Request) {
 	checkedPostList := services.ListPostsService()
 
-	jsonPosts, err := json.MarshalIndent(checkedPostList, "", "")
+	jsonPosts, err := json.MarshalIndent(checkedPostList, "", " ")
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -70,26 +69,35 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	services.EditPostService(editPost.Type, editPost.Id, editPost.Title, editPost.Content)
-	response := make(map[string]string)
-	response["message"] = "Usuário alterado com sucesso"
+	edit, err2 := services.EditPostService(editPost.Type, editPost.Id, editPost.Title, editPost.Content)
 
-	checkedResponse, err2 := json.Marshal(response)
 	if err2 != nil {
-		http.Error(w, err2.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Write(checkedResponse)
+	response, err3 := json.MarshalIndent(edit, "", " ")
+
+	if err3 != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Fprintf(w, string(response))
 }
 func DeletePost(w http.ResponseWriter, r *http.Request) {
-	var deleteUser DeletePostRequest
 
-	err := json.NewDecoder(r.Body).Decode(&deleteUser)
+	vars := mux.Vars(r)
+	id := vars["postId"]
+
+	convId, err := strconv.ParseInt(id, 10, 64)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	services.DeletePostService(convId)
 
 	response := make(map[string]string)
 	response["message"] = "Post deletado com sucesso"

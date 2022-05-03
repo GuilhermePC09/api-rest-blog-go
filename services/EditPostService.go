@@ -6,23 +6,25 @@ import (
 	"github.com/GuilhermePC09/api-rest-blog-go/repository"
 )
 
-func EditPostService(editType string, postId int64, title string, content string) error {
+func EditPostService(editType string, postId int64, title string, content string) ([]repository.PostInfo, error) {
 
 	postExists := repository.FindPost(postId)
 
 	if !postExists {
-		return errors.New("post dont exist")
+		return nil, errors.New("post dont exist")
 	}
 
 	if editType == "title" {
 		repository.PostSqlUpdateTitle(postId, title)
-		return nil
+		editedPost := repository.PostSqlSelectId(postId)
+		return editedPost, nil
 	}
 
 	if editType == "content" {
 		repository.PostSqlUpdateContent(postId, content)
-		return nil
+		editedPost := repository.PostSqlSelectId(postId)
+		return editedPost, nil
 	} else {
-		return errors.New("type arent selected")
+		return nil, errors.New("type arent selected")
 	}
 }
