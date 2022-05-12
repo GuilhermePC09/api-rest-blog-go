@@ -4,21 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/GuilhermePC09/api-rest-blog-go/services"
 	"github.com/gorilla/mux"
 )
 
 type PostRequest struct {
-	Id      int64
+	Id      string
 	IdUser  int64
 	Title   string
 	Content string
 }
 
 type EditPostRequest struct {
-	Id      int64
+	Id      string
 	Title   string
 	Content string
 	Type    string
@@ -90,21 +89,15 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["postId"]
 
-	convId, err := strconv.ParseInt(id, 10, 64)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	services.DeletePostService(convId)
+	services.DeletePostService(id)
 
 	response := make(map[string]string)
 	response["message"] = "Post deletado com sucesso"
 
 	checkResponse, err2 := json.Marshal(response)
+
 	if err2 != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err2.Error(), http.StatusBadRequest)
 		return
 	}
 

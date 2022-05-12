@@ -5,6 +5,7 @@ import (
 )
 
 func ListPostsService() []repository.PostInfo {
+
 	ListOfPosts := repository.PostSqlSelect()
 
 	return ListOfPosts

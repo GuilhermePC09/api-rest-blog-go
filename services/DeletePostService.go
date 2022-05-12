@@ -2,8 +2,9 @@ package services
 
 import "github.com/GuilhermePC09/api-rest-blog-go/repository"
 
-func DeletePostService(id int64) {
+func DeletePostService(id string) int64 {
 
-	repository.PostSqlDelete(id)
+	checkDelete := repository.PostSqlDelete(id)
 
+	return checkDelete
 }

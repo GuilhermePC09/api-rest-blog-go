@@ -6,7 +6,9 @@ import (
 	"github.com/GuilhermePC09/api-rest-blog-go/repository"
 )
 
-func EditPostService(editType string, postId int64, title string, content string) ([]repository.PostInfo, error) {
+type PostInfo interface{}
+
+func EditPostService(editType string, postId string, title string, content string) ([]repository.PostInfo, error) {
 
 	postExists := repository.FindPost(postId)
 

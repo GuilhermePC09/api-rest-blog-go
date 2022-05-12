@@ -5,29 +5,33 @@ import (
 	"time"
 
 	"github.com/GuilhermePC09/api-rest-blog-go/repository"
+	"github.com/google/uuid"
 )
 
 type IPostRequest struct {
-	UserId  int64
-	PostId  int64
-	Title   string
-	Content string
+	UserId   int64
+	PostId   string
+	Title    string
+	Content  string
+	Datetime string
 }
 
-func CreatePostService(userId int64, title string, content string) (IPostRequest, error) {
+type IPostRequestTest interface{}
+
+func CreatePostService(userId int64, title string, content string) ([]IPostRequestTest, error) {
+
+	PostList := make([]IPostRequestTest, 0)
 
 	if title == "" || content == "" {
-		return IPostRequest{}, errors.New("missing information")
+		return nil, errors.New("missing information")
 	}
 
-	postId := time.Now().UnixNano() / (1 << 44)
+	PostId := uuid.New()
+	DateTime := time.Now().String()
 
-	repository.PostSqlInsert(postId, userId, title, content)
+	repository.PostSqlInsert(PostId.String(), userId, title, content, DateTime)
 
-	return IPostRequest{
-		UserId:  userId,
-		PostId:  postId,
-		Title:   title,
-		Content: content,
-	}, nil
+	PostList = append(PostList, userId, PostId.String(), title, content, DateTime)
+
+	return PostList, nil
 }

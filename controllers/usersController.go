@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/GuilhermePC09/api-rest-blog-go/services"
 	"github.com/gorilla/mux"
@@ -94,21 +93,14 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["userId"]
 
-	convId, err := strconv.ParseInt(id, 10, 64)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	services.DeletePostService(convId)
+	services.DeletePostService(id)
 
 	response := make(map[string]string)
 	response["message"] = "User deletado com sucesso"
 
 	checkResponse, err2 := json.Marshal(response)
 	if err2 != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err2.Error(), http.StatusBadRequest)
 		return
 	}
 

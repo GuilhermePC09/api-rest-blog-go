@@ -2,7 +2,6 @@ package dbconfig
 
 import (
 	"fmt"
-	"time"
 )
 
 type UserTable struct {
@@ -14,10 +13,10 @@ type UserTable struct {
 
 type PostTable struct {
 	IdUser   int64
-	IdPost   int64
+	IdPost   string
 	Title    string
 	Content  string
-	DateTime time.Time
+	DateTime string
 }
 
 const PostgresDriver = "postgres"
